@@ -3,7 +3,7 @@
 
 # large dataset files 
 data/elliptic/*
-!data/ellptic/*.zip
+!data/elliptic/*.zip
 
 ### Django ###
 *.log
