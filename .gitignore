@@ -1,6 +1,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/django,python,visualstudiocode,venv
 # Edit at https://www.toptal.com/developers/gitignore?templates=django,python,visualstudiocode,venv
 
+# large dataset files 
+data/elliptic/*
+!data/ellptic/*.zip
+
 ### Django ###
 *.log
 *.pot
