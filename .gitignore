@@ -4,6 +4,12 @@
 # large dataset files 
 data/elliptic/*
 !data/elliptic/*.zip
+data/cache/**/*.json
+
+
+*.key
+*.pem
+secrets.json
 
 ### Django ###
 *.log
