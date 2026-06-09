@@ -91,6 +91,7 @@ CREATE DATABASE aml_monitoring;
 CREATE USER aml_user WITH PASSWORD 'your_password_from_.env';
 ALTER ROLE aml_user SET client_encoding TO 'utf8';
 GRANT ALL PRIVILEGES ON DATABASE aml_monitoring TO aml_user;
+ALTER SCHEMA public OWNER TO aml_user;
 \q
 ```
 
