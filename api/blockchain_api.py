@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+from api.feature_extractor import FeatureExtractor
 
 
 class BlockchainAPI:
@@ -24,6 +25,7 @@ class BlockchainAPI:
     def __init__(self):
         self.session = requests.Session()
         self.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        self.feature_extractor = FeatureExtractor()
 
     def get_transaction(self, tx_hash: str) -> Optional[Dict]:
         """
@@ -109,6 +111,36 @@ class BlockchainAPI:
         except requests.exceptions.RequestException as e:
             print(f"Error fetching balance: {e}")
             return None
+
+    def get_address_with_features(self, address: str, limit: int = 50):
+        """
+        Get address transactions with extracted features
+
+        Returns:
+            Tuple of (address_data, transactions_with_features)
+        """
+        address_data = self.get_address(address, limit)
+
+        if not address_data:
+            return None, []
+        
+        transactions_with_features = []
+
+        for tx in address_data.get('txs', [])[:limit]:
+            tx_hash = tx.get('hash')
+            tx_full_data = self.get_transaction(tx_hash)
+
+            if tx_full_data:
+                features = self.feature_extractor.extract_transaction_features(tx_full_data)
+                transactions_with_features.append({
+                    'tx_hash': tx_hash,
+                    'tx_data': tx_full_data,
+                    'features': features
+                })
+            
+        return address, transactions_with_features
+
+
 
 def test_api():
     """
