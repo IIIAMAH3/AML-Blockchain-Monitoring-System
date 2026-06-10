@@ -108,6 +108,7 @@ class WalletAnalysis(models.Model):
 class TransactionAnalysis(models.Model):
     """
     Stores per-transaction risk analysis for a wallet
+    Linked to WalletAnalysis
     """
     # Foreign key to wallet analysis
     wallet_analysis = models.ForeignKey(
@@ -193,4 +194,37 @@ class TransactionAnalysis(models.Model):
     
     def __str__(self):
         return f"TX {self.tx_hash[:8]}... (Risk: {self.ensemble_risk_score:.1f})"
-      
+    
+
+class AnalysisFeatures(models.Model):
+    """
+    Stores extracted features for debugging and analysis
+    Optional: Can be deleted if storage becomes an issue
+    """
+
+    transaction_analysis = models.OneToOneField(
+        TransactionAnalysis,
+        on_delete=models.CASCADE,
+        related_name='features',
+        help_text='Associated transaction analysis'
+    )
+
+    # Store the 166 features as JSON (space efficient)
+    feature_vector = models.JSONField(
+        help_text='Dictionary of {feature_number: value} for all 166 features'
+    )
+
+    # Time step (Feature 1)
+    time_step = models.IntegerField(
+        help_text='Time step in ELliptic daataset(1-49)'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    
+    class Meta:
+        verbose_name_plural = "Analysis Features"
+    
+    def __str__(self):
+        return f"Features for {self.transaction_analysis.tx_hash[:8]}..."

@@ -3,7 +3,7 @@ Django Admin Configuration for AML Monitoring
 """
 
 from django.contrib import admin
-from .models import WalletAnalysis, TransactionAnalysis
+from .models import WalletAnalysis, TransactionAnalysis, AnalysisFeatures
 
 @admin.register(WalletAnalysis)
 class WalletAnalysisAdmin(admin.ModelAdmin):
@@ -50,12 +50,12 @@ class WalletAnalysisAdmin(admin.ModelAdmin):
         }),
     )
     
+    @admin.display(description="Wallet address")
     def wallet_address_short(self, obj):
         """Display shortened wallet address"""
         return f"{obj.wallet_address[:8]}...{obj.wallet_address[-4:]}"
     
-    wallet_address_short.short_description = "Wallet Address"
-
+    
 @admin.register(TransactionAnalysis)
 class TransactionAnalysisAdmin(admin.ModelAdmin):
     """Admin interface for transaction analyses"""
@@ -95,8 +95,17 @@ class TransactionAnalysisAdmin(admin.ModelAdmin):
         })
     )
 
+    @admin.display(description="Transaction Hash")
     def tx_hash_short(self, obj):
         """Display shortened tx hash"""
-        return f"{obj.tx_hash[:8]}...{tx_hash[-4:]}"
+        return f"{obj.tx_hash[:8]}...{obj.tx_hash[-4:]}"
 
-    tx_hash_short.short_description = 'Transaction Hash'
+
+@admin.register(AnalysisFeatures)
+class AnalysisFeaturesAdmin(admin.ModelAdmin):
+    """Admin interface for transaction features"""
+    
+    list_display = ['transaction_analysis', 'time_step', 'created_at']
+    readonly_fields = ['created_at']
+    search_fields = ['transaction_analysis__tx_hash']
+
