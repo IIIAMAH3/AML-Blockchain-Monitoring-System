@@ -104,7 +104,7 @@ class FeatureExtractor:
             if num_outputs > 0:
                 features[8] = (total_output / num_outputs) / 1e8
 
-            # Feature 9-12: Min/Max input/output values
+            # Feature 9-12: Min    limit=500  # Analyze last 500 transactions/Max input/output values
             if tx_data.get('inputs'):
                 input_values = [
                     inp.get('prev_out', {}).get('value', 0) for inp in tx_data.get('inputs', [])
