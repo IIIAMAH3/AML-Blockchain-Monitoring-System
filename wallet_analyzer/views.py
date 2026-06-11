@@ -126,3 +126,23 @@ def analyze_wallet(request, address):
     }
 
     return render(request, 'wallet_analyzer/wallet_analysis.html', context)
+
+def transaction_detail(request, analysis_id, tx_id):
+    """
+    Detailed view of a single transaction within a wallet analysis
+    """
+    analysis = get_object_or_404(WalletAnalysis, id=analysis_id)
+    transaction = get_object_or_404(
+        TransactionAnalysis,
+        id=tx_id,
+        wallet_analysis=analysis
+    )
+
+    context = {
+        'analysis': analysis,
+        'transaction': transaction
+    }
+
+    return render(request, 'wallet_analyzer/transaction_detail.html', context)
+
+
