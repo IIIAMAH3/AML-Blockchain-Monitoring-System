@@ -41,3 +41,88 @@ def home(request):
     }
 
     return render(request, 'wallet_analyzer/home.html', context)
+
+
+def analyze_wallet(request, address):
+    """
+    Analyze a wallet and display results
+
+    This view:
+    1.Checks if specific wallet was recently analyzed (cache)
+    2.If not, fetches data from Blockchain API
+    3.Extract features
+    4.Runs ML models (placeholder for now)
+    5.Saves results to database
+    6.Displays results 
+    """
+    # Check cache - has this wallet been analyzed in last 24 hours?
+    recent_analysis = WalletAnalysis.objects.filter(
+        wallet_address=address,
+        analyzed_at__gte=datetime.now() - timedelta(hours=24)).first()
+    
+    if recent_analysis:
+        # Use cached results
+        analysis = recent_analysis
+        cached = True
+    else:
+        # Fetch and analyze
+        cached = False
+
+        try:
+            # Initialize API client
+            api = BlockchainAPI()
+
+            # Fetch blockchain data
+            address_data, transactions_with_features = api.get_address_with_features(
+                address,
+                limit=500 # Analyze last 500 transactions
+            )
+            if not address_data:
+                messages.error(request, 'Could not fetch data from blockchain. Please try again')
+                return redirect('home')
+            
+            # For now, create placeholder analysis
+            # Week 3 will add actual ML predictions
+            analysis = WalletAnalysis.objects.create(
+                wallet_address=address,
+                risk_score=50.0,
+                risk_level='MEDIUM',
+                total_transactions_analyzed=len(transactions_with_features),
+                high_risk_transaction_count=0,
+                high_risk_transaction_ratio=0.0,
+                patterns_detected=[],
+                illicit_connection_count=0,
+                notes='Analysis completed successfully (ML predictions coming later)'
+            )
+
+            for tx_info in transactions_with_features[:100]: # Save first 100 for now
+                tx_data = tx_info['tx_data']        
+
+                TransactionAnalysis.objects.create(
+                    wallet_analysis=analysis,
+                    tx_hash=tx_info['tx_hash'],
+                    tx_timestamp=datetime.fromtimestamp(tx_data.get('time', 0)),
+                    tx_amount_btc=sum(o.get('value', 0) for o in tx_data.get('out', [])),
+                    isolation_forest_score=50.0, # Placeholder
+                    local_outlier_factor_score=50.0, # Placeholder
+                    random_forest_score=50.0, # Placeholder
+                    ensemble_risk_score=50.0, # Placeholder
+                    risk_level='MEDIUM', # Placeholder,
+                    is_connected_to_illicit=False,
+                )
+        
+        except Exception as e:
+            messages.error(request, f'Error analyzing wallet: {str(e)}')
+            return redirect('home')
+
+    # Get related transactions
+    transactions = analysis.transactions.all()[:20] # type: ignore
+    
+    context = {
+        'analysis': analysis,
+        'transactions': transactions,
+        'cached': cached,
+        'wallet_address_display': f"{address[:8]}...{address[-4]}",
+    }
+
+    return render(request, 'wallet_analyzer/wallet_analysis.html', context)
