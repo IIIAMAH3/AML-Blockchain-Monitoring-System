@@ -13,7 +13,7 @@ class WalletAnalysisAdmin(admin.ModelAdmin):
         'wallet_address_short',
         'risk_score',
         'risk_level',
-        'total_transaction_analyzed',
+        'total_transactions_analyzed',
         'analyzed_at'
     ]
 

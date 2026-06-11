@@ -40,7 +40,7 @@ class WalletAnalysis(models.Model):
     )
 
     # Transaction statistics
-    total_transaction_analyzed = models.IntegerField(
+    total_transactions_analyzed = models.IntegerField(
         help_text='Number of transactions analyzed'
     )
 

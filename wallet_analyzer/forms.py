@@ -21,13 +21,12 @@ class WalletAddressForm(forms.Form):
             'autocomplete': 'off',
 
         }),
-        help_text='Bitcoin P2PKH address (starts with 1), P2SH address (starts with 3), or Bech32 address(starts with bc1)'
+        help_text='Bitcoin P2PKH (1...), P2SH  (3...), or Bech32 (starts with bc1...)'
     )
 
     def clean_wallet_address(self):
         """Validate Bitcoin address format"""
-        address = self.cleaned_data.get('wallet address', '').strip()
-
+        address = self.cleaned_data['wallet_address']
         if not address:
             raise forms.ValidationError('Please enter a wallet address')
         
@@ -37,9 +36,9 @@ class WalletAddressForm(forms.Form):
         # Bech32: 42-62 characters, starts with bc1
 
         patterns = [
-            r'^1[1-9A-HJ-N-P-Z]{25, 34}$', #P2PKH
-            r'^3[1-9A-HJ-NP-Z]{25, 34}$',  #P2SH
-            r'^bc1[a-z0-9]{39, 59}$',      #Bech32
+            r'^1[1-9A-HJ-NP-Za-km-z]{25,34}$', #P2PKH
+            r'^3[1-9A-HJ-NP-Za-km-z]{25,34}$',  #P2SH
+            r'^bc1[a-z0-9]{39,59}$',      #Bech32
         ]
 
         is_valid = any(re.match(pattern, address) for pattern in patterns)
