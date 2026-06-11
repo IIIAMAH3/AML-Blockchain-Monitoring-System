@@ -1,0 +1,113 @@
+{% extends 'wallet_analyzer/base.html' %}
+
+{% block title %}Home - AML Monitoring System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Hero Section -->
+        <div class="card bg-primary text-white mb-5">
+            <div class="card-body p-5 text-center">
+                <h1 class="card-title mb-3">
+                    <i class="fas fa-lock"></i> AML Transaction Monitoring
+                </h1>
+                <p class="card-text lead mb-4">
+                    Analyze Bitcoin wallets for anti-money laundering (AML) compliance using machine learning
+                </p>
+                <p class="text-muted">
+                    Enter a wallet address below to get started →
+                </p>
+            </div>
+        </div>
+        
+        <!-- Form Card -->
+        <div class="card mb-5">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-search"></i> Analyze Wallet</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        {{ form.wallet_address }}
+                        {% if form.wallet_address.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.wallet_address.errors }}
+                        </div>
+                        {% endif %}
+                        {% if form.wallet_address.help_text %}
+                        <small class="form-text text-muted d-block mt-2">
+                            {{ form.wallet_address.help_text|safe }}
+                        </small>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-search"></i> Analyze Wallet
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">{{ total_analyses }}</h3>
+                        <p class="card-text">Wallets Analyzed</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-warning">{{ avg_risk_score }}</h3>
+                        <p class="card-text">Average Risk Score</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-danger">{{ high_risk_count }}</h3>
+                        <p class="card-text">High Risk Wallets</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info Cards -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-info-circle"></i> How It Works
+                        </h5>
+                        <p class="card-text">
+                            Our system fetches your wallet's transaction history from the blockchain,
+                            analyzes each transaction using multiple machine learning models, and
+                            provides a comprehensive risk assessment.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-robot"></i> Machine Learning Models
+                        </h5>
+                        <p class="card-text">
+                            We use three complementary ML algorithms: Isolation Forest, Local Outlier Factor,
+                            and Random Forest to detect anomalous transaction patterns.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
