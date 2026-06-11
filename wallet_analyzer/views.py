@@ -23,7 +23,7 @@ def home(request):
         if form.is_valid():
             wallet_address = form.cleaned_data['wallet_address']
             # Redirect to analysis page
-            return redirect('analyze_wallet', address=wallet_address)
+            return redirect('wallet_analyzer:analyze_wallet', address=wallet_address)
     else:
         form = WalletAddressForm()
         
@@ -75,7 +75,7 @@ def analyze_wallet(request, address):
             # Fetch blockchain data
             address_data, transactions_with_features = api.get_address_with_features(
                 address,
-                limit=500 # Analyze last 500 transactions
+                limit=5 # Analyze last 500 transactions
             )
             if not address_data:
                 messages.error(request, 'Could not fetch data from blockchain. Please try again')
@@ -102,7 +102,7 @@ def analyze_wallet(request, address):
                     wallet_analysis=analysis,
                     tx_hash=tx_info['tx_hash'],
                     tx_timestamp=datetime.fromtimestamp(tx_data.get('time', 0)),
-                    tx_amount_btc=sum(o.get('value', 0) for o in tx_data.get('out', [])),
+                    tx_amount_btc=sum(o.get('value', 0) for o in tx_data.get('out', [])) / 1e8,
                     isolation_forest_score=50.0, # Placeholder
                     local_outlier_factor_score=50.0, # Placeholder
                     random_forest_score=50.0, # Placeholder
@@ -113,7 +113,7 @@ def analyze_wallet(request, address):
         
         except Exception as e:
             messages.error(request, f'Error analyzing wallet: {str(e)}')
-            return redirect('home')
+            return redirect('wallet_analyzer:home')
 
     # Get related transactions
     transactions = analysis.transactions.all()[:20] # type: ignore
