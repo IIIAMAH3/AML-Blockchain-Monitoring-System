@@ -120,7 +120,6 @@ class BlockchainAPI:
             Tuple of (address_data, transactions_with_features)
         """
         address_data = self.get_address(address, limit)
-
         if not address_data:
             return None, []
         
@@ -128,6 +127,7 @@ class BlockchainAPI:
 
         for tx in address_data.get('txs', [])[:limit]:
             tx_hash = tx.get('hash')
+            time.sleep(2)
             tx_full_data = self.get_transaction(tx_hash)
 
             if tx_full_data:
