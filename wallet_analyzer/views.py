@@ -146,3 +146,36 @@ def transaction_detail(request, analysis_id, tx_id):
     return render(request, 'wallet_analyzer/transaction_detail.html', context)
 
 
+def alerts(request):
+    """
+    Display high-risk wallets and transactions
+    """
+    # Get high-risk wallets analyzed in last 30 days
+    high_risk_analyses = WalletAnalysis.objects.filter(
+        risk_level='HIGH',
+        analyzed_at__gte=datetime.now() - timedelta(days=30)
+    ).order_by('-risk_score')
+
+    # Get high-risk transactions
+    high_risk_transactions = TransactionAnalysis.objects.filter(
+        risk_level='HIGH'
+    ).order_by('-ensemble_risk_score')[:50]
+
+    context = {
+        'high_risk_analyses': high_risk_analyses,
+        'high_risk_transactions': high_risk_transactions,
+    }
+
+    return render(request, 'wallet_analyzer/alerts.html', context)
+
+def recent_analyses(request):
+    """
+    Display recently analyzed wallets
+    """
+    analyses = WalletAnalysis.objects.all()[:20]
+
+    context = {
+        'analyses': analyses,
+    }
+
+    return render(request, 'wallet_analyzer/recent_analyses.html', context)
