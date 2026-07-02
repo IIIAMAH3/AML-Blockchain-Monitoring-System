@@ -90,13 +90,16 @@ sudo -u postgres psql
 CREATE DATABASE aml_monitoring;
 CREATE USER aml_user WITH PASSWORD 'your_password_from_.env';
 ALTER ROLE aml_user SET client_encoding TO 'utf8';
-GRANT ALL PRIVILEGES ON DATABASE aml_monitoring TO aml_user;
+\q
+sudo -u postgres psql -d aml_monitoring;
 ALTER SCHEMA public OWNER TO aml_user;
+GRANT ALL PRIVILEGES ON DATABASE aml_monitoring TO aml_user;
 \q
 ```
 
 ### 5. Run setup script
 ```bash
+chmod +x scripts/setup_env.sh
 bash scripts/setup_env.sh
 ```
 
