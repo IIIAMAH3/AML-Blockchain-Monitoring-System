@@ -91,7 +91,8 @@ class WalletAnalysis(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.wallet_address[:8]}...(Risk {self.risk_score:.1f})"
+        return f"{self.wallet_address[:8]}qw...(Risk {self.risk_score:.1f})"
+    
     
     def get_risk_level_color(self):
         """
