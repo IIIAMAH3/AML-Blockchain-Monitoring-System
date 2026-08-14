@@ -1,0 +1,55 @@
+{% extends "wallet_analyzer/base.html" %}
+{% block title %}Analyse Bitcoin Wallet — AML Monitor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-5">
+
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+
+        <h5 class="card-title mb-1">Bitcoin Wallet Risk Analysis</h5>
+        <p class="text-muted small mb-4">
+          Enter a Bitcoin address to score its recent transactions for
+          signs of illicit activity using machine learning.
+        </p>
+
+        <form method="POST" action="{% url 'analyze' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="wallet_address" class="form-label fw-semibold">
+              Wallet Address
+            </label>
+            <input
+              type="text"
+              id="wallet_address"
+              name="wallet_address"
+              class="form-control font-monospace"
+              placeholder="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+              required
+              autofocus
+            >
+            <div class="form-text">
+              Supports P2PKH, P2SH, and Bech32 formats.
+              Up to 50 recent transactions are analysed.
+            </div>
+          </div>
+          <button type="submit" class="btn btn-dark w-100">
+            Analyse Wallet
+          </button>
+        </form>
+
+      </div>
+    </div>
+
+    <div class="alert alert-warning mt-3 small mb-0">
+      <strong>Research prototype.</strong>
+      Scores come from a Random Forest model trained on the Elliptic Bitcoin
+      dataset (temporal split, ROC-AUC 0.960). Feature extraction from live
+      blockchain data uses a 10-feature approximation of the 165-feature
+      Elliptic representation. Results are indicative only.
+    </div>
+
+  </div>
+</div>
+{% endblock %}
