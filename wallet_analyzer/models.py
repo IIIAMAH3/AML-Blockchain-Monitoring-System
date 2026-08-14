@@ -40,7 +40,7 @@ class WalletAnalysis(models.Model):
     )
 
     # Transaction statistics
-    total_transaction_analyzed = models.IntegerField(
+    total_transactions_analyzed = models.IntegerField(
         help_text='Number of transactions analyzed'
     )
 
@@ -92,8 +92,7 @@ class WalletAnalysis(models.Model):
 
     def __str__(self):
         return f"{self.wallet_address[:8]}qw...(Risk {self.risk_score:.1f})"
-    
-    
+
     def get_risk_level_color(self):
         """
         Return color for risk level visualization

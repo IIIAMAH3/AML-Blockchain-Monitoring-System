@@ -69,7 +69,7 @@ def analyze(request):
             prediction = predict_transaction(features)
             tx_results.append({
                 "tx_hash": raw_tx.get("hash", ""),
-                "tx_timestamp": _parse_timestemp(raw_tx.get("time")),
+                "tx_timestamp": _parse_timestamp(raw_tx.get("time")),
                 "tx_amount_btc": get_amount_btc(raw_tx),
                 **prediction,
             })
@@ -90,7 +90,7 @@ def analyze(request):
         wallet_address=wallet_address,
         risk_score=wallet_risk["risk_score"],
         risk_level=wallet_risk["risk_level"],
-        total_transaction_analyzed=len(tx_results),
+        total_transactions_analyzed=len(tx_results),
         high_risk_transaction_count=wallet_risk["high_risk_count"],
         high_risk_transaction_ratio=wallet_risk["high_risk_ratio"],
         patterns_detected=[],
@@ -129,6 +129,7 @@ def results(request, pk: int):
         "high_risk_pct": round(wallet_analysis.high_risk_transaction_ratio * 100, 1),
     }
 
+    return render(request, "wallet_analyzer/results.html", context=context)
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
