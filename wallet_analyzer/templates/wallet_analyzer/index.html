@@ -1,55 +1,261 @@
 {% extends "wallet_analyzer/base.html" %}
-{% block title %}Analyse Bitcoin Wallet — AML Monitor{% endblock %}
+{% block title %}AML INTEL — Bitcoin Wallet Risk Scanner{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Index-specific ─────────────────────────────────────────── */
+  .hero {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 0 40px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-eyebrow::before,
+  .hero-eyebrow::after {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  .hero-title {
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: #eef0f6;
+    margin-bottom: 16px;
+  }
+
+  .hero-title span {
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    max-width: 440px;
+    line-height: 1.65;
+    margin-bottom: 44px;
+  }
+
+  /* ── Search form ────────────────────────────────────────────── */
+  .search-wrap {
+    width: 100%;
+    max-width: 580px;
+  }
+
+  .search-box {
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.12);
+  }
+
+  .search-label-row {
+    padding: 12px 18px 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .search-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  .search-input-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 8px 18px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .search-input::placeholder { color: var(--text-dim); }
+
+  .search-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    padding: 0 24px;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+
+  .search-btn:hover { background: #ffb347; }
+
+  .search-hint {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Stats strip ────────────────────────────────────────────── */
+  .stats-strip {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    max-width: 580px;
+    width: 100%;
+    margin-top: 48px;
+  }
+
+  .stat-cell {
+    flex: 1;
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .stat-cell:last-child { border-right: none; }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #eef0f6;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-value.accent { color: var(--accent); }
+
+  .stat-desc {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Disclaimer ─────────────────────────────────────────────── */
+  .disclaimer {
+    margin-top: 32px;
+    max-width: 480px;
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .disclaimer strong { color: var(--text); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-7 col-lg-5">
+<div class="hero">
 
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
+  <div class="hero-eyebrow">Transaction Risk Intelligence</div>
 
-        <h5 class="card-title mb-1">Bitcoin Wallet Risk Analysis</h5>
-        <p class="text-muted small mb-4">
-          Enter a Bitcoin address to score its recent transactions for
-          signs of illicit activity using machine learning.
-        </p>
+  <h1 class="hero-title">
+    Scan any Bitcoin<br><span>wallet for risk</span>
+  </h1>
 
-        <form method="POST" action="{% url 'analyze' %}">
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="wallet_address" class="form-label fw-semibold">
-              Wallet Address
-            </label>
-            <input
-              type="text"
-              id="wallet_address"
-              name="wallet_address"
-              class="form-control font-monospace"
-              placeholder="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-              required
-              autofocus
-            >
-            <div class="form-text">
-              Supports P2PKH, P2SH, and Bech32 formats.
-              Up to 50 recent transactions are analysed.
-            </div>
-          </div>
-          <button type="submit" class="btn btn-dark w-100">
-            Analyse Wallet
-          </button>
-        </form>
+  <p class="hero-sub">
+    Machine learning analysis of on-chain transaction patterns.
+    Powered by a Random Forest model trained on 203,769 Bitcoin transactions.
+  </p>
 
+  <div class="search-wrap">
+    <form method="POST" action="{% url 'analyze' %}">
+      {% csrf_token %}
+      <div class="search-box">
+        <div class="search-label-row">
+          <div class="search-dot"></div>
+          <span class="label">Bitcoin Address</span>
+        </div>
+        <div class="search-input-row">
+          <input
+            type="text"
+            name="wallet_address"
+            class="search-input"
+            placeholder="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+            required
+            autofocus
+            spellcheck="false"
+            autocomplete="off"
+          >
+          <button type="submit" class="search-btn">Analyse →</button>
+        </div>
       </div>
-    </div>
+    </form>
 
-    <div class="alert alert-warning mt-3 small mb-0">
-      <strong>Research prototype.</strong>
-      Scores come from a Random Forest model trained on the Elliptic Bitcoin
-      dataset (temporal split, ROC-AUC 0.960). Feature extraction from live
-      blockchain data uses a 10-feature approximation of the 165-feature
-      Elliptic representation. Results are indicative only.
+    <div class="search-hint">
+      Supports P2PKH · P2SH · Bech32 &nbsp;·&nbsp; Up to 50 transactions
     </div>
-
   </div>
+
+  <div class="stats-strip">
+    <div class="stat-cell">
+      <div class="stat-value accent">203,769</div>
+      <div class="stat-desc">Training transactions</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-value">0.960</div>
+      <div class="stat-desc">ROC-AUC (temporal)</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-value">3</div>
+      <div class="stat-desc">ML models compared</div>
+    </div>
+  </div>
+
+  <p class="disclaimer">
+    <strong>Research prototype.</strong>
+    Scores are indicative only. Feature extraction approximates 10 of 165 Elliptic
+    dataset features from live blockchain data. Not for operational AML use.
+  </p>
+
 </div>
 {% endblock %}
