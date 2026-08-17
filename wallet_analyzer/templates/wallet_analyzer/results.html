@@ -1,128 +1,391 @@
 {% extends "wallet_analyzer/base.html" %}
-{% block title %}Results — {{ wallet.wallet_address|slice:":12" }}… — AML Monitor{% endblock %}
+{% block title %}Analysis — {{ wallet.wallet_address|slice:":12" }}… — AML Intel{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Page grid ──────────────────────────────────────────────── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 800px) {
+    .results-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Gauge card ─────────────────────────────────────────────── */
+  .gauge-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px 24px;
+    position: sticky;
+    top: 72px;
+  }
+
+  .gauge-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 20px;
+    position: relative;
+  }
+
+  .gauge-svg { overflow: visible; }
+
+  .gauge-track {
+    fill: none;
+    stroke: var(--surface-2);
+    stroke-width: 9;
+  }
+
+  .gauge-ring {
+    fill: none;
+    stroke-width: 9;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 64px 64px;
+    transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);
+  }
+
+  .gauge-ring.LOW    { stroke: var(--low);  filter: drop-shadow(0 0 6px rgba(16,185,129,.5)); }
+  .gauge-ring.MEDIUM { stroke: var(--med);  filter: drop-shadow(0 0 6px rgba(245,158,11,.5)); }
+  .gauge-ring.HIGH   { stroke: var(--high); filter: drop-shadow(0 0 6px rgba(239,68,68,.5));  }
+
+  .gauge-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .gauge-score {
+    font-family: var(--font-mono);
+    font-size: 2.4rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .gauge-score-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .risk-badge-large {
+    display: block;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 8px 0;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+  }
+
+  .risk-badge-large.LOW    { background: var(--low-dim);  color: var(--low);  border: 1px solid rgba(16,185,129,.2); }
+  .risk-badge-large.MEDIUM { background: var(--med-dim);  color: var(--med);  border: 1px solid rgba(245,158,11,.2); }
+  .risk-badge-large.HIGH   { background: var(--high-dim); color: var(--high); border: 1px solid rgba(239,68,68,.2);  }
+
+  /* ── Wallet metadata ────────────────────────────────────────── */
+  .meta-table { width: 100%; border-collapse: collapse; }
+
+  .meta-table tr { border-bottom: 1px solid var(--border); }
+  .meta-table tr:last-child { border-bottom: none; }
+
+  .meta-table td {
+    padding: 10px 0;
+    font-size: 0.82rem;
+  }
+
+  .meta-table td:first-child {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    width: 52%;
+  }
+
+  .meta-table td:last-child {
+    font-family: var(--font-mono);
+    text-align: right;
+    color: var(--text);
+  }
+
+  .wallet-address-display {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    word-break: break-all;
+    margin-bottom: 20px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    line-height: 1.6;
+  }
+
+  /* ── Right column ───────────────────────────────────────────── */
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Tx table card ──────────────────────────────────────────── */
+  .tx-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .tx-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .tx-table thead th {
+    padding: 11px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    background: var(--surface-2);
+  }
+
+  .tx-table thead th.right { text-align: right; }
+  .tx-table thead th.center { text-align: center; }
+
+  .tx-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+    border-left: 3px solid transparent;
+  }
+
+  .tx-table tbody tr:last-child { border-bottom: none; }
+  .tx-table tbody tr:hover { background: var(--surface-2); }
+
+  .tx-table tbody tr.row-LOW    { border-left-color: var(--low);  }
+  .tx-table tbody tr.row-MEDIUM { border-left-color: var(--med);  }
+  .tx-table tbody tr.row-HIGH   { border-left-color: var(--high); }
+
+  .tx-table tbody td {
+    padding: 11px 16px;
+    font-size: 0.82rem;
+    vertical-align: middle;
+  }
+
+  .tx-hash-link {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    transition: color 0.15s;
+  }
+
+  .tx-hash-link:hover { color: var(--accent); }
+
+  .tx-date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .tx-amount {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .tx-score {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .tx-badge { text-align: center; }
+
+  /* ── Methodology box ────────────────────────────────────────── */
+  .method-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-2);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  .method-box strong { color: var(--text); font-weight: 500; }
+
+  /* ── Back button ────────────────────────────────────────────── */
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: 24px;
+    text-decoration: none;
+  }
+
+  .btn-back:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Empty state ────────────────────────────────────────────── */
+  .empty-row td {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 
-{# ── Wallet summary ─────────────────────────────────────────────────────── #}
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
-    <div class="row align-items-center g-3">
+<a href="{% url 'index' %}" class="btn-back">← New Analysis</a>
 
-      {# Left: metadata #}
-      <div class="col-md-8">
-        <h5 class="mb-1">Wallet Analysis</h5>
-        <p class="font-monospace text-muted small mb-3">
-          {{ wallet.wallet_address }}
-        </p>
-        <table class="table table-sm table-borderless mb-0" style="max-width:380px">
-          <tbody>
-            <tr>
-              <td class="text-muted">Transactions analysed</td>
-              <td class="fw-semibold">{{ wallet.total_transaction_analyzed }}</td>
-            </tr>
-            <tr>
-              <td class="text-muted">High-risk transactions</td>
-              <td class="fw-semibold">
-                {{ wallet.high_risk_transaction_count }}
-                <span class="text-muted fw-normal">({{ high_risk_pct }}%)</span>
-              </td>
-            </tr>
-            <tr>
-              <td class="text-muted">Analysed at</td>
-              <td>{{ wallet.analyzed_at|date:"Y-m-d H:i" }} UTC</td>
-            </tr>
-          </tbody>
-        </table>
+<div class="results-grid">
+
+  {# ── Left: gauge + metadata ──────────────────────────────────── #}
+  <div class="gauge-card">
+
+    {# SVG Gauge — circumference ≈ 339.3 for r=54 #}
+    {% with score=wallet.risk_score level=wallet.risk_level %}
+    <div class="gauge-wrap">
+      <svg class="gauge-svg" width="128" height="128" viewBox="0 0 128 128">
+        <circle class="gauge-track" cx="64" cy="64" r="54"/>
+        <circle
+          class="gauge-ring {{ level }}"
+          cx="64" cy="64" r="54"
+          stroke-dasharray="339.3"
+          stroke-dashoffset="{{ score | floatformat:1 }}"
+          id="gaugeRing"
+        />
+      </svg>
+      <div class="gauge-center">
+        <div class="gauge-score risk-{{ level }}">{{ score|floatformat:0 }}</div>
+        <div class="gauge-score-label">/ 100</div>
       </div>
-
-      {# Right: score dial #}
-      <div class="col-md-4 text-center">
-        <div
-          class="display-3 fw-bold risk-{{ wallet.risk_level }}"
-          title="Risk score 0–100"
-        >
-          {{ wallet.risk_score|floatformat:1 }}
-        </div>
-        <div class="text-muted small mb-2">Risk Score (0 – 100)</div>
-        <span class="badge fs-6 px-3 py-2 badge-{{ wallet.risk_level }}">
-          {{ wallet.risk_level }} RISK
-        </span>
-      </div>
-
     </div>
-  </div>
-</div>
 
-{# ── Transaction table ──────────────────────────────────────────────────── #}
-<div class="card shadow-sm mb-3">
-  <div class="card-header bg-white d-flex justify-content-between align-items-center">
-    <h6 class="mb-0">Transaction Scores</h6>
-    <span class="text-muted small">sorted by risk (highest first)</span>
-  </div>
-  <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-      <thead class="table-light">
-        <tr>
-          <th>TX Hash</th>
-          <th>Date (UTC)</th>
-          <th class="text-end">Amount (BTC)</th>
-          <th class="text-end">RF Score</th>
-          <th class="text-center">Risk</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for tx in transactions %}
-        <tr>
-          <td class="font-monospace small">
-            
-              href="https://www.blockchain.com/explorer/transactions/btc/{{ tx.tx_hash }}"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="{{ tx.tx_hash }}"
-            >{{ tx.tx_hash|slice:":16" }}…</a>
-          </td>
-          <td class="small text-muted">
-            {{ tx.tx_timestamp|date:"Y-m-d H:i" }}
-          </td>
-          <td class="text-end font-monospace small">
-            {{ tx.tx_amount_btc|floatformat:8 }}
-          </td>
-          <td class="text-end fw-semibold risk-{{ tx.risk_level }}">
-            {{ tx.ensemble_risk_score|floatformat:1 }}
-          </td>
-          <td class="text-center">
-            <span class="badge badge-{{ tx.risk_level }}">
-              {{ tx.risk_level }}
-            </span>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="5" class="text-center text-muted py-4">
-            No transactions to display.
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
+    <div class="risk-badge-large {{ level }}">{{ level }} RISK</div>
+    {% endwith %}
+
+    <div class="wallet-address-display">{{ wallet.wallet_address }}</div>
+
+    <table class="meta-table">
+      <tr>
+        <td>Transactions</td>
+        <td>{{ wallet.total_transaction_analyzed }}</td>
+      </tr>
+      <tr>
+        <td>High-risk TXs</td>
+        <td class="risk-HIGH">{{ wallet.high_risk_transaction_count }}</td>
+      </tr>
+      <tr>
+        <td>High-risk %</td>
+        <td>{{ high_risk_pct }}%</td>
+      </tr>
+      <tr>
+        <td>Analysed at</td>
+        <td>{{ wallet.analyzed_at|date:"Y-m-d H:i" }}</td>
+      </tr>
     </table>
+
+  </div>
+
+  {# ── Right: table + methodology ──────────────────────────────── #}
+  <div class="right-col">
+
+    <div class="tx-card">
+      <div class="card-header">
+        <span class="card-label">Transaction Scores</span>
+        <span class="label">sorted by risk</span>
+      </div>
+      <table class="tx-table">
+        <thead>
+          <tr>
+            <th>TX Hash</th>
+            <th>Date (UTC)</th>
+            <th class="right">Amount (BTC)</th>
+            <th class="right">RF Score</th>
+            <th class="center">Risk</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in transactions %}
+          <tr class="row-{{ tx.risk_level }}">
+            <td>
+              <a
+                class="tx-hash-link"
+                href="https://www.blockchain.com/explorer/transactions/btc/{{ tx.tx_hash }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="{{ tx.tx_hash }}"
+              >{{ tx.tx_hash|slice:":20" }}…</a>
+            </td>
+            <td class="tx-date">{{ tx.tx_timestamp|date:"Y-m-d H:i" }}</td>
+            <td class="tx-amount">{{ tx.tx_amount_btc|floatformat:6 }}</td>
+            <td class="tx-score risk-{{ tx.risk_level }}">{{ tx.ensemble_risk_score|floatformat:1 }}</td>
+            <td class="tx-badge"><span class="badge badge-{{ tx.risk_level }}">{{ tx.risk_level }}</span></td>
+          </tr>
+          {% empty %}
+          <tr class="empty-row">
+            <td colspan="5">No transactions to display.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="method-box">
+      <strong>Methodology.</strong>
+      Scores produced by a Random Forest classifier (temporal split, time steps 1–41 training / 42–49 test,
+      ROC-AUC 0.960, PR-AUC 0.705). Feature extraction computes 10 transaction-level features from the
+      Blockchain.com API (BTC amounts, fee, input/output counts, size, fee rate, UTC hour).
+      The remaining 155 Elliptic-specific and graph-neighbourhood features default to 0.
+      Wallet risk aggregates transaction scores, weighting the top 30% worst transactions 2×.
+      <strong>Results are indicative only and must not be used for operational AML decisions.</strong>
+    </div>
+
   </div>
 </div>
 
-{# ── Methodology note ───────────────────────────────────────────────────── #}
-<div class="alert alert-secondary small">
-  <strong>Methodology:</strong>
-  Scores produced by a Random Forest classifier (temporal split, time steps
-  1–41 training / 42–49 test, ROC-AUC 0.960, PR-AUC 0.705). Feature
-  extraction uses 10 computable transaction-level features (BTC amounts,
-  fee, input/output counts, tx size, fee rate, hour of day);
-  the remaining 155 Elliptic-specific features default to 0.
-  Graph-neighbourhood features (f95–f166) are not available from public
-  blockchain data and are excluded. Scores are research-grade estimates
-  and must not be used for operational AML decisions.
-</div>
-
-<a href="{% url 'index' %}" class="btn btn-outline-secondary">
-  ← Analyse another wallet
-</a>
+{# ── Animate gauge on load ────────────────────────────────────── #}
+<script>
+  (function () {
+    const ring  = document.getElementById('gaugeRing');
+    if (!ring) return;
+    const score = {{ wallet.risk_score|floatformat:2 }};
+    const circ  = 339.3;
+    // offset = portion NOT filled
+    const target = circ * (1 - score / 100);
+    // Start fully empty, animate to target
+    ring.style.strokeDashoffset = circ;
+    requestAnimationFrame(function () {
+      ring.style.strokeDashoffset = target;
+    });
+  })();
+</script>
 
 {% endblock %}
