@@ -3,47 +3,241 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}AML Blockchain Monitor{% endblock %}</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  >
+  <title>{% block title %}AML INTEL — Blockchain Monitor{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
-    body          { background: #f8f9fa; }
-    .navbar-brand { font-weight: 700; letter-spacing: .4px; }
-    .risk-LOW     { color: #198754; }
-    .risk-MEDIUM  { color: #856404; }
-    .risk-HIGH    { color: #dc3545; }
-    .badge-LOW    { background-color: #198754; }
-    .badge-MEDIUM { background-color: #ffc107; color: #212529; }
-    .badge-HIGH   { background-color: #dc3545; }
+    /* ── Design tokens ──────────────────────────────────────────── */
+    :root {
+      --bg:          #0b0d14;
+      --surface:     #131720;
+      --surface-2:   #181d2a;
+      --border:      #1c2033;
+      --border-2:    #252c42;
+      --accent:      #f7931a;
+      --accent-dim:  rgba(247, 147, 26, 0.12);
+      --text:        #d4dae8;
+      --text-muted:  #4f5a78;
+      --text-dim:    #2d3550;
+
+      --low:         #10b981;
+      --low-dim:     rgba(16, 185, 129, 0.12);
+      --med:         #f59e0b;
+      --med-dim:     rgba(245, 158, 11, 0.12);
+      --high:        #ef4444;
+      --high-dim:    rgba(239, 68, 68, 0.12);
+
+      --font-sans:   'Space Grotesk', system-ui, sans-serif;
+      --font-mono:   'JetBrains Mono', 'Fira Code', monospace;
+
+      --radius:      4px;
+      --radius-lg:   8px;
+    }
+
+    /* ── Reset & base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 15px; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      /* Subtle grid texture */
+      background-image:
+        linear-gradient(rgba(28, 32, 51, 0.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(28, 32, 51, 0.4) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: #ffb347; }
+
+    /* ── Navigation ─────────────────────────────────────────────── */
+    .nav {
+      border-bottom: 1px solid var(--border);
+      background: rgba(11, 13, 20, 0.92);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-brand:hover { color: var(--accent); }
+
+    .nav-brand-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    .nav-tag {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border: 1px solid var(--border-2);
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+
+    /* ── Layout shell ───────────────────────────────────────────── */
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Alert ──────────────────────────────────────────────────── */
+    .alert {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-left: 3px solid var(--high);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: #fca5a5;
+      margin-bottom: 24px;
+    }
+
+    /* ── Card ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ── Risk colours ───────────────────────────────────────────── */
+    .risk-LOW    { color: var(--low);  }
+    .risk-MEDIUM { color: var(--med);  }
+    .risk-HIGH   { color: var(--high); }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+    }
+
+    .badge-LOW    { background: var(--low-dim);  color: var(--low);  border: 1px solid rgba(16,185,129,.25); }
+    .badge-MEDIUM { background: var(--med-dim);  color: var(--med);  border: 1px solid rgba(245,158,11,.25); }
+    .badge-HIGH   { background: var(--high-dim); color: var(--high); border: 1px solid rgba(239,68,68,.25);  }
+
+    /* ── Utility ────────────────────────────────────────────────── */
+    .mono { font-family: var(--font-mono); }
+    .muted { color: var(--text-muted); }
+    .small { font-size: 0.8rem; }
+    .label {
+      font-family: var(--font-mono);
+      font-size: 0.63rem;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+      margin-top: 60px;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
+
+  {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-dark mb-4">
-  <div class="container">
-    <a class="navbar-brand" href="{% url 'index' %}">
-      🔍 AML Blockchain Monitor
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="{% url 'index' %}" class="nav-brand">
+      <div class="nav-brand-icon">₿</div>
+      AML Intel
     </a>
+    <span class="nav-tag">Research Prototype</span>
   </div>
 </nav>
 
-<div class="container pb-5">
-
+<div class="page">
   {% if messages %}
     {% for message in messages %}
-    <div class="alert alert-danger alert-dismissible" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <div class="alert">{{ message }}</div>
     {% endfor %}
   {% endif %}
 
   {% block content %}{% endblock %}
-
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<footer class="footer">
+  AML Blockchain Monitor &nbsp;·&nbsp; Elliptic Dataset &nbsp;·&nbsp; RF Temporal Split ROC-AUC 0.960
+</footer>
+
 </body>
 </html>
