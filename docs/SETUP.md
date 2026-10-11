@@ -9,8 +9,8 @@
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
-cd aml-blockchain-monitoring
+git clone https://github.com/IIIAMAH3/AML-Blockchain-Monitoring-System.git
+cd AML-Blockchain-Monitoring-System
 ```
 
 ### 2. Create your local .env file
@@ -51,16 +51,7 @@ GRANT ALL PRIVILEGES ON DATABASE aml_monitoring TO aml_user;
 
 ### 5. Run setup script
 
-**Option B: PowerShell**
-```powershell
-# Allow script execution (first time only):
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-# Then run:
-.\scripts\setup_env.ps1
-```
-
-**Option C: Manual Setup**
+**Manual Setup**
 ```bash
 # Install dependencies
 uv sync
